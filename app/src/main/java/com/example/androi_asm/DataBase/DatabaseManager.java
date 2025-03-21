@@ -1,5 +1,6 @@
 package com.example.androi_asm.DataBase;
 
+import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -7,11 +8,24 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.os.Build;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+
+import com.example.androi_asm.R;
+
 public class DatabaseManager extends SQLiteOpenHelper {
+
+    private Context context;
     private static final String DATABASE_NAME = "budget.db";
     private static final int DATABASE_VERSION = 1;
 
-    // Bảng Users
+    // Table & Column definitions
     private static final String TABLE_USERS = "Users";
     private static final String COL_USER_ID = "userID";
     private static final String COL_USERNAME = "username";
@@ -19,7 +33,6 @@ public class DatabaseManager extends SQLiteOpenHelper {
     private static final String COL_EMAIL = "email";
     private static final String COL_ROLE = "role";
 
-    // Bảng Expense (Chi tiêu)
     private static final String TABLE_EXPENSE = "Expense";
     private static final String COL_EXPENSE_ID = "expenseID";
     private static final String COL_USER_ID_FK = "userID";
@@ -28,20 +41,17 @@ public class DatabaseManager extends SQLiteOpenHelper {
     private static final String COL_EXPENSE_DATE = "expenseDate";
     private static final String COL_DESCRIPTION = "description";
 
-    // Bảng Budget (Ngân sách)
     private static final String TABLE_BUDGET = "Budget";
     private static final String COL_BUDGET_ID = "budgetID";
     private static final String COL_BUDGET_AMOUNT = "amount";
     private static final String COL_START_DATE = "startDate";
     private static final String COL_END_DATE = "endDate";
 
-    // Bảng Reports (Báo cáo)
     private static final String TABLE_REPORTS = "Reports";
     private static final String COL_REPORT_ID = "reportID";
     private static final String COL_REPORT_START_DATE = "startDate";
     private static final String COL_REPORT_END_DATE = "endDate";
 
-    // Bảng Notifications (Thông báo)
     private static final String TABLE_NOTIFICATIONS = "Notifications";
     private static final String COL_NOTIFICATION_ID = "notificationID";
     private static final String COL_MESSAGE = "message";
@@ -49,11 +59,11 @@ public class DatabaseManager extends SQLiteOpenHelper {
 
     public DatabaseManager(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
+        this.context = context;
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        // Tạo bảng Users
         db.execSQL("CREATE TABLE " + TABLE_USERS + " (" +
                 COL_USER_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 COL_USERNAME + " TEXT, " +
@@ -61,36 +71,36 @@ public class DatabaseManager extends SQLiteOpenHelper {
                 COL_EMAIL + " TEXT, " +
                 COL_ROLE + " TEXT)");
 
-        // Tạo bảng Expense (Chi tiêu)
         db.execSQL("CREATE TABLE " + TABLE_EXPENSE + " (" +
                 COL_EXPENSE_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 COL_USER_ID_FK + " INTEGER, " +
                 COL_CATEGORY_ID + " INTEGER, " +
                 COL_AMOUNT + " REAL, " +
                 COL_EXPENSE_DATE + " TEXT, " +
-                COL_DESCRIPTION + " TEXT)");
+                COL_DESCRIPTION + " TEXT, " +
+                "FOREIGN KEY (" + COL_USER_ID_FK + ") REFERENCES " + TABLE_USERS + "(" + COL_USER_ID + "))");
 
-        // Tạo bảng Budget (Ngân sách)
         db.execSQL("CREATE TABLE " + TABLE_BUDGET + " (" +
                 COL_BUDGET_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 COL_USER_ID_FK + " INTEGER, " +
                 COL_BUDGET_AMOUNT + " REAL, " +
                 COL_START_DATE + " TEXT, " +
-                COL_END_DATE + " TEXT)");
+                COL_END_DATE + " TEXT, " +
+                "FOREIGN KEY (" + COL_USER_ID_FK + ") REFERENCES " + TABLE_USERS + "(" + COL_USER_ID + "))");
 
-        // Tạo bảng Reports (Báo cáo)
         db.execSQL("CREATE TABLE " + TABLE_REPORTS + " (" +
                 COL_REPORT_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 COL_USER_ID_FK + " INTEGER, " +
                 COL_REPORT_START_DATE + " TEXT, " +
-                COL_REPORT_END_DATE + " TEXT)");
+                COL_REPORT_END_DATE + " TEXT, " +
+                "FOREIGN KEY (" + COL_USER_ID_FK + ") REFERENCES " + TABLE_USERS + "(" + COL_USER_ID + "))");
 
-        // Tạo bảng Notifications (Thông báo)
         db.execSQL("CREATE TABLE " + TABLE_NOTIFICATIONS + " (" +
                 COL_NOTIFICATION_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 COL_USER_ID_FK + " INTEGER, " +
                 COL_MESSAGE + " TEXT, " +
-                COL_DATE_SENT + " TEXT)");
+                COL_DATE_SENT + " TEXT, " +
+                "FOREIGN KEY (" + COL_USER_ID_FK + ") REFERENCES " + TABLE_USERS + "(" + COL_USER_ID + "))");
     }
 
     @Override
@@ -103,7 +113,7 @@ public class DatabaseManager extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    // 📌 Chức năng Thêm dữ liệu (CREATE)
+    // Add user
     public long addUser(String username, String password, String email, String role) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -114,6 +124,7 @@ public class DatabaseManager extends SQLiteOpenHelper {
         return db.insert(TABLE_USERS, null, values);
     }
 
+    // Add expense
     public long addExpense(int userID, int categoryID, double amount, String date, String description) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -125,12 +136,131 @@ public class DatabaseManager extends SQLiteOpenHelper {
         return db.insert(TABLE_EXPENSE, null, values);
     }
 
-    // 📌 Chức năng Cập nhật dữ liệu (UPDATE)
+    // Add budget
+    public long addBudget(int userID, double amount, String startDate, String endDate) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COL_USER_ID_FK, userID);
+        values.put(COL_BUDGET_AMOUNT, amount);
+        values.put(COL_START_DATE, startDate);
+        values.put(COL_END_DATE, endDate);
+        return db.insert(TABLE_BUDGET, null, values);
+    }
+
+    // Add report
+    public long addReport(int userID, String startDate, String endDate) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COL_USER_ID_FK, userID);
+        values.put(COL_REPORT_START_DATE, startDate);
+        values.put(COL_REPORT_END_DATE, endDate);
+        return db.insert(TABLE_REPORTS, null, values);
+    }
+
+    // Update user
     public int updateUser(int userID, String username, String email) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(COL_USERNAME, username);
         values.put(COL_EMAIL, email);
         return db.update(TABLE_USERS, values, COL_USER_ID + "=?", new String[]{String.valueOf(userID)});
+    }
+
+    // Update expense
+    public int updateExpense(int expenseID, double amount, String date, String description) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COL_AMOUNT, amount);
+        values.put(COL_EXPENSE_DATE, date);
+        values.put(COL_DESCRIPTION, description);
+        return db.update(TABLE_EXPENSE, values, COL_EXPENSE_ID + "=?", new String[]{String.valueOf(expenseID)});
+    }
+
+    // Delete user
+    public int deleteUser(int userID) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        return db.delete(TABLE_USERS, COL_USER_ID + "=?", new String[]{String.valueOf(userID)});
+    }
+
+    // Delete expense
+    public int deleteExpense(int expenseID) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        return db.delete(TABLE_EXPENSE, COL_EXPENSE_ID + "=?", new String[]{String.valueOf(expenseID)});
+    }
+
+    // Get all users
+    public Cursor getAllUsers() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        return db.rawQuery("SELECT * FROM " + TABLE_USERS, null);
+    }
+
+    // Get expenses by user
+    public Cursor getAllExpensesByUser(int userID) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        return db.rawQuery("SELECT * FROM " + TABLE_EXPENSE + " WHERE " + COL_USER_ID_FK + "=?", new String[]{String.valueOf(userID)});
+    }
+
+    // Get reports by user
+    public Cursor getReportsByUser(int userID) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        return db.rawQuery("SELECT * FROM " + TABLE_REPORTS + " WHERE " + COL_USER_ID_FK + "=?", new String[]{String.valueOf(userID)});
+    }
+
+    // Get notifications by user
+    public Cursor getNotificationsByUser(int userID) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        return db.rawQuery("SELECT * FROM " + TABLE_NOTIFICATIONS + " WHERE " + COL_USER_ID_FK + "=?", new String[]{String.valueOf(userID)});
+    }
+
+    // Insert and trigger notification
+    public void insertNotification(int userId, String message, String dateSent) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COL_USER_ID_FK, userId);
+        values.put(COL_MESSAGE, message);
+        values.put(COL_DATE_SENT, dateSent);
+        db.insert(TABLE_NOTIFICATIONS, null, values);
+
+        // Push notification
+        NotificationUtils.showReminderNotification(context, message);
+    }
+
+    // Get current date
+    public String getTodayDate() {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        return sdf.format(new Date());
+    }
+
+    // Calculate days between two dates
+    public long calculateDaysBetween(String startDate, String endDate) {
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            Date start = sdf.parse(startDate);
+            Date end = sdf.parse(endDate);
+            return (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
+    // Notification helper class
+    public static class NotificationUtils {
+        @SuppressLint("MissingPermission")
+        public static void showReminderNotification(Context context, String message) {
+            String channelId = "expense_reminder_channel";
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                NotificationChannel channel = new NotificationChannel(channelId, "Expense Reminder", NotificationManager.IMPORTANCE_DEFAULT);
+                NotificationManager manager = context.getSystemService(NotificationManager.class);
+                if (manager != null) manager.createNotificationChannel(channel);
+            }
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(context, channelId)
+                    .setSmallIcon(R.drawable.ic_launcher_foreground)
+                    .setContentTitle("Expense Reminder")
+                    .setContentText(message)
+                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                    .setAutoCancel(true);
+            NotificationManagerCompat.from(context).notify((int) System.currentTimeMillis(), builder.build());
+        }
     }
 }
