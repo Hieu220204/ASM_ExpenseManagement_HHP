@@ -7,10 +7,9 @@
     android:layout_height="match_parent"
     android:padding="16dp"
     android:orientation="vertical"
-    android:gravity="center_horizontal"
-    tools:context=".ExpenseActivity">
+    android:gravity="center_horizontal">
 
-    <!-- Tiêu đề -->
+    <!-- Tiêu đề trang -->
     <TextView
         android:id="@+id/txtTitle"
         android:layout_width="wrap_content"
@@ -30,7 +29,6 @@
         android:textSize="16sp"/>
 
     <EditText
-    <EditText
         android:id="@+id/txtDateIncome"
         android:layout_width="match_parent"
         android:layout_height="48dp"
@@ -40,7 +38,6 @@
         android:focusable="false"
         android:hint="Select date"
         android:padding="8dp"/>
-
 
     <!-- Ghi chú -->
     <TextView
@@ -90,16 +87,19 @@
         android:textColor="@android:color/white"
         android:textSize="18sp"/>
 
-    <Button
-        android:id="@+id/btnBack"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Back to Home" />
-
+    <!-- Danh sách chi tiêu -->
     <ListView
         android:id="@+id/listViewExpenses"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"/>
+
+    <!-- Nút quay lại -->
+    <Button
+        android:id="@+id/btnBack"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Back to Home"/>
 
 </LinearLayout>

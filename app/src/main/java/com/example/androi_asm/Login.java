@@ -1,55 +1,51 @@
 package com.example.androi_asm;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
 
-public class Login extends AppCompatActivity {
+import com.example.androi_asm.DataBase.DatabaseManager;
 
+public class Login extends AppCompatActivity {
     private EditText txtEmail, txtPassword;
     private Button btnLogin, btnRegister;
-    private SharedPreferences sharedPreferences;
+    private DatabaseManager dbManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
+        dbManager = new DatabaseManager(this);
         txtEmail = findViewById(R.id.txtEmail);
         txtPassword = findViewById(R.id.txtPassword);
         btnLogin = findViewById(R.id.btnLogin);
         btnRegister = findViewById(R.id.btnRegister);
 
-        sharedPreferences = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+        btnLogin.setOnClickListener(view -> {
+            String email = txtEmail.getText().toString().trim();
+            String password = txtPassword.getText().toString().trim();
 
-        btnLogin.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String email = txtEmail.getText().toString().trim();
-                String password = txtPassword.getText().toString().trim();
+            if (email.isEmpty() || password.isEmpty()) {
+                Toast.makeText(this, "Vui lòng nhập đầy đủ thông tin!", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
-                String registeredEmail = sharedPreferences.getString("email", "");
-                String registeredPassword = sharedPreferences.getString("password", "");
-
-                if (email.equals(registeredEmail) && password.equals(registeredPassword)) {
-                    Toast.makeText(Login.this, "Login successful!", Toast.LENGTH_SHORT).show();
-                    // Chuyển sang màn hình chính (nếu có)
-                } else {
-                    Toast.makeText(Login.this, "Invalid email or password", Toast.LENGTH_SHORT).show();
-                }
+            if (dbManager.checkUser(email, password)) {
+                Toast.makeText(this, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(Login.this, Home.class)); // Đổi Home thành HomeActivity
+                finish();
+            } else {
+                Toast.makeText(this, "Tên đăng nhập hoặc mật khẩu sai!", Toast.LENGTH_SHORT).show();
             }
         });
 
-        btnRegister.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(Login.this, Register.class));
-            }
+        btnRegister.setOnClickListener(view -> {
+            startActivity(new Intent(Login.this,Register.class));
         });
     }
 }
