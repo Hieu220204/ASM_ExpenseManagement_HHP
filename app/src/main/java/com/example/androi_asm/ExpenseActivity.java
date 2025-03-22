@@ -13,7 +13,7 @@ public class ExpenseActivity extends AppCompatActivity {
     Button btnSubmitExpense, btnBack;
     ListView listViewExpenses;
     ArrayList<ExpenseItem> expenseList;
-    ArrayAdapter<ExpenseItem> expenseAdapter;
+    ArrayAdapter expenseAdapter;
     int editIndex = -1;
 
     @Override
