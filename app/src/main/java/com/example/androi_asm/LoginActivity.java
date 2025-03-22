@@ -10,10 +10,14 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.androi_asm.DataBase.DatabaseManager;
 
+<<<<<<< HEAD:app/src/main/java/com/example/androi_asm/Login.java
 public class Login extends AppCompatActivity {
     private EditText txtEmail, txtPassword;
     private Button btnLogin, btnRegister;
     private DatabaseManager dbManager;
+=======
+public class LoginActivity extends AppCompatActivity {
+>>>>>>> restore-lost-code:app/src/main/java/com/example/androi_asm/LoginActivity.java
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
