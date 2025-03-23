@@ -9,20 +9,20 @@ import java.util.ArrayList;
 import java.util.Calendar;
 
 public class ExpenseActivity extends AppCompatActivity {
-    // Khai báo các thành phần giao diện
+    // UI components declaration
     EditText txtDateIncome, txtNoteExpense, txtAmountExpense;
     Button btnSubmitExpense, btnBack;
     ListView listViewExpenses;
-    ArrayList<ExpenseItem> expenseList; // Danh sách các khoản chi tiêu
-    ArrayAdapter expenseAdapter;        // Adapter để hiển thị danh sách
-    int editIndex = -1;                // Vị trí đang chỉnh sửa (nếu có), mặc định là -1 nghĩa là thêm mới
+    ArrayList<ExpenseItem> expenseList; // List to store expense items
+    ArrayAdapter expenseAdapter;        // Adapter to display expenses in the ListView
+    int editIndex = -1;                // Index of the item being edited; -1 means adding a new item
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_expense); // Gán layout cho Activity
+        setContentView(R.layout.activity_expense); // Set the layout for the activity
 
-        // Ánh xạ các thành phần từ XML
+        // Map UI components from XML layout
         txtDateIncome = findViewById(R.id.txtDateIncome);
         txtNoteExpense = findViewById(R.id.txtNoteExpense);
         txtAmountExpense = findViewById(R.id.txtAmountExpense);
@@ -30,65 +30,64 @@ public class ExpenseActivity extends AppCompatActivity {
         btnBack = findViewById(R.id.btnBack);
         listViewExpenses = findViewById(R.id.listViewExpenses);
 
-        // Khởi tạo danh sách và adapter
+        // Initialize expense list and adapter
         expenseList = new ArrayList<>();
         expenseAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, expenseList);
         listViewExpenses.setAdapter(expenseAdapter);
 
-        // Mở hộp thoại chọn ngày khi click vào ô ngày
+        // Show date picker dialog when clicking on the date field
         txtDateIncome.setOnClickListener(v -> showDatePicker());
 
-        // Xử lý sự kiện khi bấm nút Submit
+        // Handle the submit button click
         btnSubmitExpense.setOnClickListener(v -> {
             String date = txtDateIncome.getText().toString();
             String note = txtNoteExpense.getText().toString();
             String amountStr = txtAmountExpense.getText().toString();
 
-            // Kiểm tra nếu còn ô chưa nhập
+            // Check for empty fields
             if (date.isEmpty() || note.isEmpty() || amountStr.isEmpty()) {
-                Toast.makeText(this, "Vui lòng điền đầy đủ thông tin", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
                 return;
             }
 
             double amount = Double.parseDouble(amountStr);
-            String category = detectCategory(note); // Xác định danh mục chi tiêu dựa vào ghi chú
+            String category = detectCategory(note); // Automatically detect category based on the note
 
-            // Nếu đang thêm mới
+            // Add new expense or update existing expense
             if (editIndex == -1) {
                 expenseList.add(new ExpenseItem(date, note, amount, category));
-            } else { // Nếu đang chỉnh sửa
-                ExpenseItem item = expenseList.get(editIndex);
-                item = new ExpenseItem(date, note, amount, category);
+            } else {
+                ExpenseItem item = new ExpenseItem(date, note, amount, category);
                 expenseList.set(editIndex, item);
-                editIndex = -1; // Reset trạng thái về thêm mới
+                editIndex = -1; // Reset to add new mode
             }
 
-            expenseAdapter.notifyDataSetChanged(); // Cập nhật giao diện
-            clearInputs(); // Xóa dữ liệu trong ô nhập
+            expenseAdapter.notifyDataSetChanged(); // Refresh ListView
+            clearInputs(); // Clear input fields
         });
 
-        // Khi click vào một item trong ListView để chỉnh sửa
+        // Handle clicking on an item to edit
         listViewExpenses.setOnItemClickListener((parent, view, position, id) -> {
             ExpenseItem item = expenseList.get(position);
             txtDateIncome.setText(item.getDate());
             txtNoteExpense.setText(item.getNote());
             txtAmountExpense.setText(String.valueOf(item.getAmount()));
-            editIndex = position; // Ghi nhớ vị trí item đang chỉnh sửa
+            editIndex = position; // Store index of the item being edited
         });
 
-        // Khi nhấn giữ vào item để xóa
+        // Handle long-click on an item to delete
         listViewExpenses.setOnItemLongClickListener((parent, view, position, id) -> {
             expenseList.remove(position);
             expenseAdapter.notifyDataSetChanged();
-            Toast.makeText(this, "Đã xóa", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Deleted", Toast.LENGTH_SHORT).show();
             return true;
         });
 
-        // Nút quay về màn hình chính
+        // Back button to return to the previous screen
         btnBack.setOnClickListener(v -> finish());
     }
 
-    // Hàm hiển thị DatePicker để chọn ngày
+    // Display a date picker dialog
     private void showDatePicker() {
         final Calendar calendar = Calendar.getInstance();
         int year = calendar.get(Calendar.YEAR);
@@ -101,14 +100,14 @@ public class ExpenseActivity extends AppCompatActivity {
         datePickerDialog.show();
     }
 
-    // Hàm xóa dữ liệu trong các ô nhập sau khi submit
+    // Clear all input fields after submission
     private void clearInputs() {
         txtDateIncome.setText("");
         txtNoteExpense.setText("");
         txtAmountExpense.setText("");
     }
 
-    // Hàm tự động phát hiện danh mục dựa trên từ khóa trong ghi chú
+    // Automatically detect the category based on keywords in the note
     private String detectCategory(String note) {
         note = note.toLowerCase();
         if (note.contains("food")) return "Food";
