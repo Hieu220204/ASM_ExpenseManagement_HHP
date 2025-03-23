@@ -11,49 +11,49 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.androi_asm.DataBase.DatabaseManager;
 
-<<<<<<< HEAD:app/src/main/java/com/example/androi_asm/Register.java
+
 public class Register extends AppCompatActivity {
     private EditText edtFullName, txtEmailRegister, txtPasswordRegister;
     private Button btnRegister, btnBackToLogin;
     private DatabaseManager dbManager;
-=======
-public class RegisterActivity extends AppCompatActivity {
->>>>>>> restore-lost-code:app/src/main/java/com/example/androi_asm/RegisterActivity.java
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_register);
+    public class RegisterActivity extends AppCompatActivity {
 
-        dbManager = new DatabaseManager(this);
-        edtFullName = findViewById(R.id.edtFullName);
-        txtEmailRegister = findViewById(R.id.txtEmailRegister);
-        txtPasswordRegister = findViewById(R.id.txtPasswordRegister);
-        btnRegister = findViewById(R.id.btnRegister);
-        btnBackToLogin = findViewById(R.id.btnBackToLogin);
+        @Override
+        protected void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            setContentView(R.layout.activity_register);
 
-        btnRegister.setOnClickListener(view -> {
-            String fullName = edtFullName.getText().toString().trim();
-            String email = txtEmailRegister.getText().toString().trim();
-            String password = txtPasswordRegister.getText().toString().trim();
+            dbManager = new DatabaseManager(this);
+            edtFullName = findViewById(R.id.edtFullName);
+            txtEmailRegister = findViewById(R.id.txtEmailRegister);
+            txtPasswordRegister = findViewById(R.id.txtPasswordRegister);
+            btnRegister = findViewById(R.id.btnRegister);
+            btnBackToLogin = findViewById(R.id.btnBackToLogin);
 
-            if (fullName.isEmpty() || email.isEmpty() || password.isEmpty()) {
-                Toast.makeText(this, "Please fill in all fields!", Toast.LENGTH_SHORT).show();
-                return;
-            }
+            btnRegister.setOnClickListener(view -> {
+                String fullName = edtFullName.getText().toString().trim();
+                String email = txtEmailRegister.getText().toString().trim();
+                String password = txtPasswordRegister.getText().toString().trim();
 
-            if (dbManager.registerUser(fullName, password, email, "user")) {
-                Toast.makeText(this, "Registration successful!", Toast.LENGTH_SHORT).show();
+                if (fullName.isEmpty() || email.isEmpty() || password.isEmpty()) {
+                    Toast.makeText(this, "Please fill in all fields!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                if (dbManager.registerUser(fullName, password, email, "user")) {
+                    Toast.makeText(this, "Registration successful!", Toast.LENGTH_SHORT).show();
+                    startActivity(new Intent(Register.this, Login.class));
+                    finish();
+                } else {
+                    Toast.makeText(this, "Registration failed!", Toast.LENGTH_SHORT).show();
+                }
+            });
+
+            btnBackToLogin.setOnClickListener(view -> {
                 startActivity(new Intent(Register.this, Login.class));
                 finish();
-            } else {
-                Toast.makeText(this, "Registration failed!", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        btnBackToLogin.setOnClickListener(view -> {
-            startActivity(new Intent(Register.this, Login.class));
-            finish();
-        });
+            });
+        }
     }
 }
