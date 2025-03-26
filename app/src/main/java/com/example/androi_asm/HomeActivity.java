@@ -57,7 +57,7 @@ public class HomeActivity extends AppCompatActivity {
 
         // Handle logout by navigating back to LoginActivity and finishing the current activity
         btnLogout.setOnClickListener(v -> {
-            startActivity(new Intent(HomeActivity.this, Login.LoginActivity.class));
+            startActivity(new Intent(HomeActivity.this, LoginActivity.class));
             finish(); // Close HomeActivity after logout
         });
     }

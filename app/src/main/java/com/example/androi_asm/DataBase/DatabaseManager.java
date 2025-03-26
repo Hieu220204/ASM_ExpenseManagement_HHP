@@ -9,9 +9,14 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.os.Build;
+import android.util.Log;
+
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 import com.example.androi_asm.R;
+
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -29,7 +34,6 @@ public class DatabaseManager extends SQLiteOpenHelper {
     private static final String COL_PASSWORD = "password";
     private static final String COL_EMAIL = "email";
     private static final String COL_ROLE = "role";
-
     private static final String TABLE_EXPENSE = "Expense";
     private static final String COL_EXPENSE_ID = "expenseID";
     private static final String COL_USER_ID_FK = "userID";
@@ -63,11 +67,9 @@ public class DatabaseManager extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         String createUsersTable = "CREATE TABLE " + TABLE_USERS + " (" +
                 COL_USER_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                COL_USERNAME + " TEXT UNIQUE, " +
-                COL_PASSWORD + " TEXT, " +
-                COL_EMAIL + " TEXT, " +
+                COL_EMAIL + " TEXT UNIQUE, " +  // Đảm bảo email là duy nhất
+                COL_PASSWORD + " TEXT NOT NULL, " +
                 COL_ROLE + " TEXT)";
-
         db.execSQL(createUsersTable);
 
         db.execSQL("CREATE TABLE " + TABLE_EXPENSE + " (" +
@@ -113,36 +115,110 @@ public class DatabaseManager extends SQLiteOpenHelper {
     }
 
     // Add user
-    public long addUser(String username, String password, String email, String role) {
+    public long addUser(String email, String password, String role) {
         SQLiteDatabase db = this.getWritableDatabase();
+
+        // Kiểm tra email có tồn tại không
+        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_USERS + " WHERE " + COL_EMAIL + " = ?", new String[]{email});
+        if (cursor.getCount() > 0) {
+            cursor.close();
+            return -1; // Email đã tồn tại
+        }
+        cursor.close();
+
+        String hashedPassword = hashPassword(password); // Mã hóa mật khẩu
+
         ContentValues values = new ContentValues();
-        values.put(COL_USERNAME, username);
-        values.put(COL_PASSWORD, password);
         values.put(COL_EMAIL, email);
-        values.put(COL_ROLE, role);
+        values.put(COL_PASSWORD, hashedPassword);
+        values.put(COL_ROLE, role != null ? role : "user");  // Mặc định là "user"
+
         return db.insert(TABLE_USERS, null, values);
     }
 
     // Check login
-    public boolean checkUser(String username, String password) {
+    public boolean checkUser(String email, String password) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_USERS + " WHERE " +
-                COL_USERNAME + " = ? AND " + COL_PASSWORD + " = ?", new String[]{username, password});
+        String hashedPassword = hashPassword(password); // Mã hóa mật khẩu nhập vào
+
+        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_USERS +
+                        " WHERE " + COL_EMAIL + " = ? AND " + COL_PASSWORD + " = ?",
+                new String[]{email, hashedPassword});
+
         boolean exists = cursor.getCount() > 0;
         cursor.close();
         return exists;
     }
 
+    // Lấy tất cả người dùng
+    public Cursor getAllUsers() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        return db.rawQuery("SELECT * FROM Users ORDER BY userID ASC", null);
+    }
+
+    // Lấy thông tin user theo ID
+    public Cursor getUserById(int userId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        return db.rawQuery("SELECT * FROM Users WHERE id = ?", new String[]{String.valueOf(userId)});
+    }
+
+    // Cập nhật user
+    public int updateUser(int userId, String username, String role) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("username", username);
+        values.put("role", role);
+        return db.update("Users", values, "id = ?", new String[]{String.valueOf(userId)});
+    }
+
+    // Xóa user
+    public void deleteUser(int userId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete("Users", "id = ?", new String[]{String.valueOf(userId)});
+    }
+
     // Add expense
     public long addExpense(int userID, int categoryID, double amount, String date, String description) {
         SQLiteDatabase db = this.getWritableDatabase();
+
+        // Thêm chi tiêu mới vào database
         ContentValues values = new ContentValues();
         values.put(COL_USER_ID_FK, userID);
         values.put(COL_CATEGORY_ID, categoryID);
         values.put(COL_AMOUNT, amount);
         values.put(COL_EXPENSE_DATE, date);
         values.put(COL_DESCRIPTION, description);
-        return db.insert(TABLE_EXPENSE, null, values);
+        long result = db.insert(TABLE_EXPENSE, null, values);
+
+        if (result != -1) {
+            // Gửi thông báo chi tiêu mới
+            String expenseMessage = "You spent $" + amount + " on " + description;
+            insertNotification(userID, expenseMessage, getTodayDate());
+
+            // Kiểm tra budget của người dùng
+            checkAndNotifyBudget(userID);
+        }
+
+        return result;
+    }
+
+    // Phương thức kiểm tra budget và gửi thông báo nếu cần
+    private void checkAndNotifyBudget(int userID) {
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor cursor = db.rawQuery("SELECT amount FROM Budget WHERE userID = ? ORDER BY endDate DESC LIMIT 1",
+                new String[]{String.valueOf(userID)});
+
+        if (cursor.moveToFirst()) {
+            double currentBudget = cursor.getDouble(0);
+            cursor.close();
+
+            if (currentBudget <= 0) {
+                insertNotification(userID, "Your budget has run out!", getTodayDate());
+            } else if (currentBudget < (currentBudget * 0.3)) {
+                insertNotification(userID, "Your budget is below 30%!", getTodayDate());
+            }
+        }
     }
 
     // Add budget
@@ -194,4 +270,37 @@ public class DatabaseManager extends SQLiteOpenHelper {
 
         NotificationManagerCompat.from(context).notify((int) System.currentTimeMillis(), builder.build());
     }
+
+    public static String hashPassword(String password) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(password.getBytes());
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hash) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) hexString.append('0');
+                hexString.append(hex);
+            }
+            return hexString.toString();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    // Thêm báo cáo chi tiêu vào bảng Reports
+    public long addExpenseReport(String content, String date) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("startDate", date);
+        values.put("endDate", date);
+        return db.insert("Reports", null, values);
+    }
+
+    // Lấy danh sách báo cáo chi tiêu
+    public Cursor getExpenseReports() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        return db.rawQuery("SELECT * FROM Reports ORDER BY startDate DESC", null);
+    }
+
 }
