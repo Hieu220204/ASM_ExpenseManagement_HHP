@@ -2,12 +2,11 @@ package com.example.androi_asm;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
-
 import androidx.appcompat.app.AppCompatActivity;
-
 import com.example.androi_asm.DataBase.DatabaseManager;
 
 public class LoginActivity extends AppCompatActivity {
@@ -37,15 +36,16 @@ public class LoginActivity extends AppCompatActivity {
 
             if (dbManager.checkUser(email, password)) {
                 Toast.makeText(this, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show();
-                startActivity(new Intent(LoginActivity.this, HomeActivity.class)); // Đổi Home thành HomeActivity
+                startActivity(new Intent(LoginActivity.this, HomeActivity.class));
                 finish();
             } else {
-                Toast.makeText(this, "Tên đăng nhập hoặc mật khẩu sai!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Email hoặc mật khẩu sai!", Toast.LENGTH_SHORT).show();
             }
         });
 
         btnRegister.setOnClickListener(view -> {
             startActivity(new Intent(LoginActivity.this, RegisterActivity.class));
         });
+
     }
 }

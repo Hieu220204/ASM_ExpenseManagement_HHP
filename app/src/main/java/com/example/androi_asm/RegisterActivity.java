@@ -2,6 +2,7 @@ package com.example.androi_asm;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -37,12 +38,13 @@ public class RegisterActivity extends AppCompatActivity {
                 return;
             }
 
-            if (dbManager.registerUser(fullName, password, email, "user")) {
+            long result = dbManager.addUser(email, password, "user");
+            if (result != -1) {
                 Toast.makeText(this, "Registration successful!", Toast.LENGTH_SHORT).show();
                 startActivity(new Intent(RegisterActivity.this, LoginActivity.class));
                 finish();
             } else {
-                Toast.makeText(this, "Registration failed!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Registration failed! Email might already exist.", Toast.LENGTH_SHORT).show();
             }
         });
 
