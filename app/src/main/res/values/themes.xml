@@ -1,9 +1,29 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
+<<<<<<< HEAD
     <style name="Base.Theme.ASM_ExpenseManageApp" parent="Theme.Material3.DayNight.NoActionBar">
+=======
+    <style name="Base.Theme.Androi_ASM" parent="Theme.Material3.DayNight.NoActionBar">
+>>>>>>> 9429b28cf12214c8cbfd9a2fcfeb8c38cbeade7c
         <!-- Customize your light theme here. -->
         <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
     </style>
 
+<<<<<<< HEAD
     <style name="Theme.ASM_ExpenseManageApp" parent="Base.Theme.ASM_ExpenseManageApp" />
+=======
+    <style name="Theme.Androi_ASM" parent="Base.Theme.Androi_ASM" />
+
+    <style name="Theme.Androi_ASM.Fullscreen" parent="Theme.Androi_ASM">
+        <item name="android:actionBarStyle">@style/Widget.Theme.Androi_ASM.ActionBar.Fullscreen
+        </item>
+        <item name="android:windowActionBarOverlay">true</item>
+        <item name="android:windowBackground">@null</item>
+    </style>
+
+    <style name="ThemeOverlay.Androi_ASM.FullscreenContainer" parent="">
+        <item name="fullscreenBackgroundColor">@color/light_blue_600</item>
+        <item name="fullscreenTextColor">@color/light_blue_A200</item>
+    </style>
+>>>>>>> 9429b28cf12214c8cbfd9a2fcfeb8c38cbeade7c
 </resources>

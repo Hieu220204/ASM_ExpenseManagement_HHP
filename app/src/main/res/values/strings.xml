@@ -1,3 +1,10 @@
 <resources>
+<<<<<<< HEAD
     <string name="app_name">ASM_ExpenseManageApp</string>
+=======
+    <string name="app_name">Androi_ASM</string>
+    <string name="title_activity_calendar">Calendar</string>
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
+>>>>>>> 9429b28cf12214c8cbfd9a2fcfeb8c38cbeade7c
 </resources>
