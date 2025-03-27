@@ -30,16 +30,16 @@ public class LoginActivity extends AppCompatActivity {
             String password = txtPassword.getText().toString().trim();
 
             if (email.isEmpty() || password.isEmpty()) {
-                Toast.makeText(this, "Vui lòng nhập đầy đủ thông tin!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Please enter all required information!", Toast.LENGTH_SHORT).show();
                 return;
             }
 
             if (dbManager.checkUser(email, password)) {
-                Toast.makeText(this, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Login successful!", Toast.LENGTH_SHORT).show();
                 startActivity(new Intent(LoginActivity.this, HomeActivity.class));
                 finish();
             } else {
-                Toast.makeText(this, "Email hoặc mật khẩu sai!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Incorrect email or password!", Toast.LENGTH_SHORT).show();
             }
         });
 
