@@ -10,7 +10,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.androi_asm.DataBase.DatabaseManager;
 
-public class Login extends AppCompatActivity {
+public class LoginActivity extends AppCompatActivity {
     private EditText txtEmail, txtPassword;
     private Button btnLogin, btnRegister;
     private DatabaseManager dbManager;
@@ -37,7 +37,7 @@ public class Login extends AppCompatActivity {
 
             if (dbManager.checkUser(email, password)) {
                 Toast.makeText(this, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show();
-                startActivity(new Intent(Login.this, Home.class)); // Đổi Home thành HomeActivity
+                startActivity(new Intent(LoginActivity.this, HomeActivity.class)); // Đổi Home thành HomeActivity
                 finish();
             } else {
                 Toast.makeText(this, "Tên đăng nhập hoặc mật khẩu sai!", Toast.LENGTH_SHORT).show();
@@ -45,7 +45,7 @@ public class Login extends AppCompatActivity {
         });
 
         btnRegister.setOnClickListener(view -> {
-            startActivity(new Intent(Login.this,Register.class));
+            startActivity(new Intent(LoginActivity.this, RegisterActivity.class));
         });
     }
 }

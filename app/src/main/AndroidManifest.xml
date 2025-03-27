@@ -13,22 +13,22 @@
         android:theme="@style/Theme.Androi_ASM"
         tools:targetApi="31">
         <activity
-            android:name=".ExpenseNotifications"
+            android:name=".ExpenseNotificationsActivity"
             android:exported="false" />
         <activity
-            android:name=".ReportsExpense"
+            android:name=".ReportsExpenseActivity"
             android:exported="false" />
         <activity
-            android:name=".RecurringExpenses"
+            android:name=".RecurringExpensesActivity"
             android:exported="false" />
         <activity
-            android:name=".BudgetSetting"
+            android:name=".BudgetSettingActivity"
             android:exported="false" />
         <activity
-            android:name=".UserManagement"
+            android:name=".UserManagementActivity"
             android:exported="false" />
         <activity
-            android:name=".Home"
+            android:name=".HomeActivity"
             android:exported="false" />
         <activity
             android:name=".Calendar"
@@ -37,16 +37,16 @@
             android:label="@string/title_activity_calendar"
             android:theme="@style/Theme.Androi_ASM.Fullscreen" />
         <activity
-            android:name=".Expense"
+            android:name=".ExpenseActivity"
             android:exported="false" />
         <activity
             android:name=".Income"
             android:exported="false" />
         <activity
-            android:name=".Register"
+            android:name=".RegisterActivity"
             android:exported="false" />
         <activity
-            android:name=".Login"
+            android:name=".LoginActivity"
             android:exported="false" />
         <activity
             android:name=".MainActivity"

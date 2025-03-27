@@ -2,7 +2,6 @@ package com.example.androi_asm;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -11,7 +10,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.androi_asm.DataBase.DatabaseManager;
 
-public class Register extends AppCompatActivity {
+public class RegisterActivity extends AppCompatActivity {
     private EditText edtFullName, txtEmailRegister, txtPasswordRegister;
     private Button btnRegister, btnBackToLogin;
     private DatabaseManager dbManager;
@@ -40,7 +39,7 @@ public class Register extends AppCompatActivity {
 
             if (dbManager.registerUser(fullName, password, email, "user")) {
                 Toast.makeText(this, "Registration successful!", Toast.LENGTH_SHORT).show();
-                startActivity(new Intent(Register.this, Login.class));
+                startActivity(new Intent(RegisterActivity.this, LoginActivity.class));
                 finish();
             } else {
                 Toast.makeText(this, "Registration failed!", Toast.LENGTH_SHORT).show();
@@ -48,7 +47,7 @@ public class Register extends AppCompatActivity {
         });
 
         btnBackToLogin.setOnClickListener(view -> {
-            startActivity(new Intent(Register.this, Login.class));
+            startActivity(new Intent(RegisterActivity.this, LoginActivity.class));
             finish();
         });
     }
