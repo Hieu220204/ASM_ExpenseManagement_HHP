@@ -1,28 +1,37 @@
 package com.example.androi_asm;
 
 import android.app.DatePickerDialog;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.*;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import models.ExpenseItem;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Calendar;
 
 public class ExpenseActivity extends AppCompatActivity {
-    // UI components declaration
+    // UI components
     EditText txtDateIncome, txtNoteExpense, txtAmountExpense;
     Button btnSubmitExpense, btnBack;
     ListView listViewExpenses;
-    ArrayList<ExpenseItem> expenseList; // List to store expense items
-    ArrayAdapter expenseAdapter;        // Adapter to display expenses in the ListView
-    int editIndex = -1;                // Index of the item being edited; -1 means adding a new item
+    ArrayList<ExpenseItem> expenseList;
+    ArrayAdapter<String> expenseAdapter;
+    int editIndex = -1;
+
+    private static final String PREFS_NAME = "ExpensePrefs";
+    private static final String EXPENSE_LIST_KEY = "ExpenseList";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_expense); // Set the layout for the activity
+        setContentView(R.layout.activity_expense);
 
-        // Map UI components from XML layout
         txtDateIncome = findViewById(R.id.txtDateIncome);
         txtNoteExpense = findViewById(R.id.txtNoteExpense);
         txtAmountExpense = findViewById(R.id.txtAmountExpense);
@@ -30,64 +39,64 @@ public class ExpenseActivity extends AppCompatActivity {
         btnBack = findViewById(R.id.btnBack);
         listViewExpenses = findViewById(R.id.listViewExpenses);
 
-        // Initialize expense list and adapter
-        expenseList = new ArrayList<>();
-        expenseAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, expenseList);
-        listViewExpenses.setAdapter(expenseAdapter);
+        // Load expenses from SharedPreferences
+        expenseList = loadExpenseList();
+        updateExpenseAdapter();
 
-        // Show date picker dialog when clicking on the date field
         txtDateIncome.setOnClickListener(v -> showDatePicker());
 
-        // Handle the submit button click
         btnSubmitExpense.setOnClickListener(v -> {
             String date = txtDateIncome.getText().toString();
             String note = txtNoteExpense.getText().toString();
             String amountStr = txtAmountExpense.getText().toString();
 
-            // Check for empty fields
             if (date.isEmpty() || note.isEmpty() || amountStr.isEmpty()) {
                 Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
                 return;
             }
 
             double amount = Double.parseDouble(amountStr);
-            String category = detectCategory(note); // Automatically detect category based on the note
+            String category = detectCategory(note);
+            ExpenseItem newItem = new ExpenseItem(date, note, amount, category);
 
-            // Add new expense or update existing expense
             if (editIndex == -1) {
-                expenseList.add(new ExpenseItem(date, note, amount, category));
+                expenseList.add(newItem);
             } else {
-                ExpenseItem item = new ExpenseItem(date, note, amount, category);
-                expenseList.set(editIndex, item);
-                editIndex = -1; // Reset to add new mode
+                expenseList.set(editIndex, newItem);
+                editIndex = -1;
             }
 
-            expenseAdapter.notifyDataSetChanged(); // Refresh ListView
-            clearInputs(); // Clear input fields
+            saveExpenseList();
+            updateExpenseAdapter();
+            clearInputs();
         });
 
-        // Handle clicking on an item to edit
         listViewExpenses.setOnItemClickListener((parent, view, position, id) -> {
             ExpenseItem item = expenseList.get(position);
             txtDateIncome.setText(item.getDate());
             txtNoteExpense.setText(item.getNote());
             txtAmountExpense.setText(String.valueOf(item.getAmount()));
-            editIndex = position; // Store index of the item being edited
+            editIndex = position;
         });
 
-        // Handle long-click on an item to delete
         listViewExpenses.setOnItemLongClickListener((parent, view, position, id) -> {
-            expenseList.remove(position);
-            expenseAdapter.notifyDataSetChanged();
-            Toast.makeText(this, "Deleted", Toast.LENGTH_SHORT).show();
+            new AlertDialog.Builder(this)
+                    .setTitle("Delete Expense")
+                    .setMessage("Are you sure you want to delete this expense?")
+                    .setPositiveButton("Delete", (dialog, which) -> {
+                        expenseList.remove(position);
+                        saveExpenseList();
+                        updateExpenseAdapter();
+                        Toast.makeText(this, "Deleted", Toast.LENGTH_SHORT).show();
+                    })
+                    .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
+                    .show();
             return true;
         });
 
-        // Back button to return to the previous screen
         btnBack.setOnClickListener(v -> finish());
     }
 
-    // Display a date picker dialog
     private void showDatePicker() {
         final Calendar calendar = Calendar.getInstance();
         int year = calendar.get(Calendar.YEAR);
@@ -100,14 +109,12 @@ public class ExpenseActivity extends AppCompatActivity {
         datePickerDialog.show();
     }
 
-    // Clear all input fields after submission
     private void clearInputs() {
         txtDateIncome.setText("");
         txtNoteExpense.setText("");
         txtAmountExpense.setText("");
     }
 
-    // Automatically detect the category based on keywords in the note
     private String detectCategory(String note) {
         note = note.toLowerCase();
         if (note.contains("food")) return "Food";
@@ -115,5 +122,31 @@ public class ExpenseActivity extends AppCompatActivity {
         if (note.contains("shop")) return "Shopping";
         if (note.contains("bill")) return "Bills";
         return "Other";
+    }
+
+    private void saveExpenseList() {
+        SharedPreferences sharedPreferences = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        Gson gson = new Gson();
+        String json = gson.toJson(expenseList);
+        editor.putString(EXPENSE_LIST_KEY, json);
+        editor.apply();
+    }
+
+    private ArrayList<ExpenseItem> loadExpenseList() {
+        SharedPreferences sharedPreferences = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        Gson gson = new Gson();
+        String json = sharedPreferences.getString(EXPENSE_LIST_KEY, null);
+        Type type = new TypeToken<ArrayList<ExpenseItem>>() {}.getType();
+        return json == null ? new ArrayList<>() : gson.fromJson(json, type);
+    }
+
+    private void updateExpenseAdapter() {
+        ArrayList<String> formattedExpenses = new ArrayList<>();
+        for (ExpenseItem item : expenseList) {
+            formattedExpenses.add(item.getDate() + " - " + item.getNote() + " - $" + item.getAmount());
+        }
+        expenseAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, formattedExpenses);
+        listViewExpenses.setAdapter(expenseAdapter);
     }
 }

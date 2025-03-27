@@ -1,16 +1,19 @@
 package com.example.androi_asm;
 
+import android.app.AlertDialog;
 import android.app.DatePickerDialog;
-import android.icu.text.Edits;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.*;
 import androidx.appcompat.app.AppCompatActivity;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import models.BudgetItem;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Calendar;
 
-
- // This activity allows users to set and manage budgets by adding, editing, and viewing budget items.
 public class BudgetSettingActivity extends AppCompatActivity {
 
     // UI components
@@ -19,9 +22,12 @@ public class BudgetSettingActivity extends AppCompatActivity {
     private ListView listViewExpenses;
 
     // Adapter and list to manage budget items
-    private ArrayAdapter<BudgetItem> adapter;
+    private ArrayAdapter<String> adapter;
     private ArrayList<BudgetItem> budgetItems = new ArrayList<>();
     private int selectedPosition = -1; // Keeps track of the selected item for editing
+
+    private SharedPreferences sharedPreferences;
+    private Gson gson = new Gson();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,8 +44,12 @@ public class BudgetSettingActivity extends AppCompatActivity {
         btnBackHome = findViewById(R.id.btnBackHome);
         listViewExpenses = findViewById(R.id.listViewExpenses);
 
+        // Initialize SharedPreferences
+        sharedPreferences = getSharedPreferences("BudgetData", Context.MODE_PRIVATE);
+        loadBudgetData();
+
         // Set up adapter for ListView
-        adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, budgetItems);
+        adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, formatBudgetItems());
         listViewExpenses.setAdapter(adapter);
 
         // Set date pickers for start and end date fields
@@ -54,19 +64,26 @@ public class BudgetSettingActivity extends AppCompatActivity {
         listViewExpenses.setOnItemClickListener((parent, view, position, id) -> {
             selectedPosition = position;
             BudgetItem item = budgetItems.get(position);
-            // Pre-fill fields with selected item details
             edtContent.setText(item.getContent());
             edtAmount.setText(String.valueOf(item.getAmount()));
             edtStartDate.setText(item.getStartDate());
             edtEndDate.setText(item.getEndDate());
         });
 
+        // Handle item long click for deletion
+        listViewExpenses.setOnItemLongClickListener((parent, view, position, id) -> {
+            showDeleteConfirmationDialog(position);
+            return true;
+        });
+
         // Handle back button to return to the previous screen
-        btnBackHome.setOnClickListener(v -> finish());
+        btnBackHome.setOnClickListener(v -> {
+            saveBudgetData(); // Save data before exiting
+            finish();
+        });
     }
 
-
-     // Displays a date picker dialog and sets the selected date in the given EditText.
+    // Displays a date picker dialog and sets the selected date in the given EditText.
     private void showDatePicker(EditText editText) {
         Calendar calendar = Calendar.getInstance();
         DatePickerDialog datePicker = new DatePickerDialog(this,
@@ -80,15 +97,13 @@ public class BudgetSettingActivity extends AppCompatActivity {
         datePicker.show();
     }
 
-
-     // Adds a new budget item to the list based on user input.
+    // Adds a new budget item to the list based on user input.
     private void addBudgetItem() {
         String content = edtContent.getText().toString();
         String amountStr = edtAmount.getText().toString();
         String startDate = edtStartDate.getText().toString();
         String endDate = edtEndDate.getText().toString();
 
-        // Validate that all fields are filled
         if (content.isEmpty() || amountStr.isEmpty() || startDate.isEmpty() || endDate.isEmpty()) {
             Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
             return;
@@ -97,15 +112,15 @@ public class BudgetSettingActivity extends AppCompatActivity {
         double amount = Double.parseDouble(amountStr);
         BudgetItem item = new BudgetItem(content, amount, startDate, endDate);
 
-        // Add new item to the list and update the adapter
         budgetItems.add(item);
+        adapter.clear();
+        adapter.addAll(formatBudgetItems());
         adapter.notifyDataSetChanged();
+        saveBudgetData();
         clearFields();
     }
 
-
-     // Edits the amount of the selected budget item.
-
+    // Edits the selected budget item.
     private void editBudgetItem() {
         if (selectedPosition == -1) {
             Toast.makeText(this, "Please select an item to edit", Toast.LENGTH_SHORT).show();
@@ -119,21 +134,65 @@ public class BudgetSettingActivity extends AppCompatActivity {
         }
 
         double newAmount = Double.parseDouble(amountStr);
-        // Update amount for the selected item
         budgetItems.get(selectedPosition).setAmount(newAmount);
+
+        adapter.clear();
+        adapter.addAll(formatBudgetItems());
         adapter.notifyDataSetChanged();
+        saveBudgetData();
         clearFields();
         selectedPosition = -1;
         Toast.makeText(this, "Budget amount updated", Toast.LENGTH_SHORT).show();
     }
 
-    /**
-     * Clears all input fields.
-     */
+    // Show confirmation dialog before deleting an item
+    private void showDeleteConfirmationDialog(int position) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Delete Expense")
+                .setMessage("Are you sure you want to delete this expense?")
+                .setPositiveButton("Delete", (dialog, which) -> {
+                    budgetItems.remove(position);
+                    adapter.clear();
+                    adapter.addAll(formatBudgetItems());
+                    adapter.notifyDataSetChanged();
+                    saveBudgetData();
+                    Toast.makeText(this, "Expense deleted", Toast.LENGTH_SHORT).show();
+                })
+                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
+                .show();
+    }
+
+    // Saves budget data to SharedPreferences
+    private void saveBudgetData() {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        String json = gson.toJson(budgetItems);
+        editor.putString("budget_list", json);
+        editor.apply();
+    }
+
+    // Loads budget data from SharedPreferences
+    private void loadBudgetData() {
+        String json = sharedPreferences.getString("budget_list", null);
+        if (json != null) {
+            Type type = new TypeToken<ArrayList<BudgetItem>>() {}.getType();
+            budgetItems = gson.fromJson(json, type);
+        }
+    }
+
+    // Clears all input fields
     private void clearFields() {
         edtContent.setText("");
         edtAmount.setText("");
         edtStartDate.setText("");
         edtEndDate.setText("");
+    }
+
+    // Format budget items with a dollar sign
+    private ArrayList<String> formatBudgetItems() {
+        ArrayList<String> formattedList = new ArrayList<>();
+        for (BudgetItem item : budgetItems) {
+            formattedList.add(item.getContent() + " - $" + item.getAmount() + " - " +  item.getStartDate() + " - " + item.getEndDate());
+        }
+        return formattedList;
     }
 }
