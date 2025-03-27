@@ -53,6 +53,10 @@ public class DatabaseManager extends SQLiteOpenHelper {
     private static final String COL_REPORT_START_DATE = "startDate";
     private static final String COL_REPORT_END_DATE = "endDate";
 
+    private static final String TABLE_RECURRING_EXPENSE = "Recurring";
+    private static final String COL_RECURRING_ID = "recurringID";
+    private static final String COL_FREQUENCY = "frequency";
+
     private static final String TABLE_NOTIFICATIONS = "Notifications";
     private static final String COL_NOTIFICATION_ID = "notificationID";
     private static final String COL_MESSAGE = "message";
@@ -92,6 +96,14 @@ public class DatabaseManager extends SQLiteOpenHelper {
         db.execSQL("CREATE TABLE " + TABLE_REPORTS + " (" +
                 COL_REPORT_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 COL_USER_ID_FK + " INTEGER, " +
+                COL_REPORT_START_DATE + " TEXT, " +
+                COL_REPORT_END_DATE + " TEXT, " +
+                "FOREIGN KEY (" + COL_USER_ID_FK + ") REFERENCES " + TABLE_USERS + "(" + COL_USER_ID + "))");
+
+        db.execSQL("CREATE TABLE " + TABLE_RECURRING_EXPENSE + " (" +
+                COL_RECURRING_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                COL_USER_ID_FK + " INTEGER, " +
+                COL_FREQUENCY + " TEXT, " +
                 COL_REPORT_START_DATE + " TEXT, " +
                 COL_REPORT_END_DATE + " TEXT, " +
                 "FOREIGN KEY (" + COL_USER_ID_FK + ") REFERENCES " + TABLE_USERS + "(" + COL_USER_ID + "))");
@@ -302,5 +314,45 @@ public class DatabaseManager extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getReadableDatabase();
         return db.rawQuery("SELECT * FROM Reports ORDER BY startDate DESC", null);
     }
+
+    public long addRecurringExpense(int userID, String frequency, String startDate, String endDate) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COL_USER_ID_FK, userID);
+        values.put(COL_FREQUENCY, frequency);
+        values.put(COL_REPORT_START_DATE, startDate);
+        values.put(COL_REPORT_END_DATE, endDate);
+        return db.insert(TABLE_RECURRING_EXPENSE, null, values);
+    }
+
+    public Cursor getRecurringExpenses(int userID) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        return db.rawQuery("SELECT * FROM " + TABLE_RECURRING_EXPENSE +
+                        " WHERE " + COL_USER_ID_FK + " = ? ORDER BY " + COL_REPORT_START_DATE + " DESC",
+                new String[]{String.valueOf(userID)});
+    }
+
+    public Cursor getRecurringExpenseById(int recurringID) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        return db.rawQuery("SELECT * FROM " + TABLE_RECURRING_EXPENSE +
+                        " WHERE " + COL_RECURRING_ID + " = ?",
+                new String[]{String.valueOf(recurringID)});
+    }
+
+    public int updateRecurringExpense(int recurringID, String frequency, String startDate, String endDate) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COL_FREQUENCY, frequency);
+        values.put(COL_REPORT_START_DATE, startDate);
+        values.put(COL_REPORT_END_DATE, endDate);
+        return db.update(TABLE_RECURRING_EXPENSE, values, COL_RECURRING_ID + " = ?",
+                new String[]{String.valueOf(recurringID)});
+    }
+
+    public void deleteRecurringExpense(int recurringID) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete(TABLE_RECURRING_EXPENSE, COL_RECURRING_ID + " = ?", new String[]{String.valueOf(recurringID)});
+    }
+
 
 }
