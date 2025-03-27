@@ -3,7 +3,6 @@ package com.example.androi_asm;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
@@ -17,7 +16,7 @@ import java.util.ArrayList;
 public class ExpenseNotificationActivity extends AppCompatActivity {
     ListView lvNotifications;
     DatabaseManager databaseManager;
-    Button btnBackToHome; // Thêm biến cho nút Back to Home
+    Button btnBackToHome;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,7 +24,7 @@ public class ExpenseNotificationActivity extends AppCompatActivity {
         setContentView(R.layout.activity_expense_notifications);
 
         lvNotifications = findViewById(R.id.lvNotifications);
-        btnBackToHome = findViewById(R.id.btnBackToHome); // Ánh xạ nút Back to Home
+        btnBackToHome = findViewById(R.id.btnBackToHome);
         databaseManager = new DatabaseManager(this);
 
         loadNotifications();
@@ -34,7 +33,7 @@ public class ExpenseNotificationActivity extends AppCompatActivity {
         btnBackToHome.setOnClickListener(view -> {
             Intent intent = new Intent(ExpenseNotificationActivity.this, HomeActivity.class);
             startActivity(intent);
-            finish(); // Đóng Activity hiện tại
+            finish();
         });
     }
 
@@ -51,5 +50,11 @@ public class ExpenseNotificationActivity extends AppCompatActivity {
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, notifications);
         lvNotifications.setAdapter(adapter);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadNotifications(); // Cập nhật danh sách khi mở lại Activity
     }
 }

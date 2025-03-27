@@ -22,6 +22,8 @@
         android:layout_gravity="center"
         android:layout_marginBottom="16dp" />
 
+
+
     <!-- Nhập nội dung chi tiêu -->
     <EditText
         android:id="@+id/edtExpenseContent"
@@ -30,6 +32,16 @@
         android:hint="Spending content"
         android:inputType="text"
         android:padding="12dp" />
+
+    <!-- Tần suất chi tiêu -->
+    <EditText
+        android:id="@+id/spinnerFrequency"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Frequence"
+        android:inputType="text"
+        android:padding="12dp" />
+
 
     <!-- Nhập số tiền -->
     <EditText
