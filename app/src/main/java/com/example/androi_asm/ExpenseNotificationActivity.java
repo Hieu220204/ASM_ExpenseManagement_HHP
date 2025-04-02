@@ -1,5 +1,6 @@
 package com.example.androi_asm;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -17,6 +18,8 @@ public class ExpenseNotificationActivity extends AppCompatActivity {
     ListView lvNotifications;
     DatabaseManager databaseManager;
     Button btnBackToHome;
+    ArrayList<String> notificationList;
+    ArrayAdapter<String> adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,34 +30,32 @@ public class ExpenseNotificationActivity extends AppCompatActivity {
         btnBackToHome = findViewById(R.id.btnBackToHome);
         databaseManager = new DatabaseManager(this);
 
-        loadNotifications();
+        notificationList = new ArrayList<>();
+        adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, notificationList);
+        lvNotifications.setAdapter(adapter);
 
-        // Xử lý sự kiện khi nhấn nút Back to Home
+        loadNotifications(); // Load dữ liệu từ database
+
         btnBackToHome.setOnClickListener(view -> {
             Intent intent = new Intent(ExpenseNotificationActivity.this, HomeActivity.class);
             startActivity(intent);
             finish();
         });
+
     }
 
+    @SuppressLint("Range")
     private void loadNotifications() {
-        Cursor cursor = databaseManager.getExpenseReports();
-        ArrayList<String> notifications = new ArrayList<>();
-
-        while (cursor.moveToNext()) {
-            String message = cursor.getString(cursor.getColumnIndexOrThrow("message"));
-            String date = cursor.getString(cursor.getColumnIndexOrThrow("dateSent"));
-            notifications.add(date + ": " + message);
+        Cursor cursor = databaseManager.getAllNotifications();
+        if (cursor != null) {
+            notificationList.clear();
+            while (cursor.moveToNext()) {
+                String message = cursor.getString(cursor.getColumnIndex("message"));
+                notificationList.add(message);
+            }
+            adapter.notifyDataSetChanged();
+            cursor.close();
         }
-        cursor.close();
-
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, notifications);
-        lvNotifications.setAdapter(adapter);
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        loadNotifications(); // Cập nhật danh sách khi mở lại Activity
-    }
 }

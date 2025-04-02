@@ -122,6 +122,7 @@ public class DatabaseManager extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_EXPENSE);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_BUDGET);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_REPORTS);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_RECURRING_EXPENSE);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_NOTIFICATIONS);
         onCreate(db);
     }
@@ -165,13 +166,13 @@ public class DatabaseManager extends SQLiteOpenHelper {
     // Lấy tất cả người dùng
     public Cursor getAllUsers() {
         SQLiteDatabase db = this.getReadableDatabase();
-        return db.rawQuery("SELECT * FROM Users ORDER BY userID ASC", null);
+        return db.rawQuery("SELECT * FROM TABLE_USERS ORDER BY COL_USER_ID ASC", null);
     }
 
     // Lấy thông tin user theo ID
     public Cursor getUserById(int userId) {
         SQLiteDatabase db = this.getReadableDatabase();
-        return db.rawQuery("SELECT * FROM Users WHERE id = ?", new String[]{String.valueOf(userId)});
+        return db.rawQuery("SELECT * FROM TABLE_USER WHERE COL_USER_ID = ?", new String[]{String.valueOf(userId)});
     }
 
     // Cập nhật user
@@ -263,7 +264,7 @@ public class DatabaseManager extends SQLiteOpenHelper {
 
     // Show notification
     @SuppressLint("MissingPermission")
-    private void showNotification(String message) {
+    public void showNotification(String message) {
         String channelId = "expense_reminder_channel";
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(channelId, "Expense Reminder", NotificationManager.IMPORTANCE_DEFAULT);
@@ -281,6 +282,14 @@ public class DatabaseManager extends SQLiteOpenHelper {
                 .setAutoCancel(true);
 
         NotificationManagerCompat.from(context).notify((int) System.currentTimeMillis(), builder.build());
+    }
+
+    // Lấy danh sách thông báo theo userID
+    public Cursor getNotificationsByUser(int userId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        return db.rawQuery("SELECT * FROM " + TABLE_NOTIFICATIONS +
+                        " WHERE " + COL_USER_ID_FK + " = ? ORDER BY " + COL_DATE_SENT + " DESC",
+                new String[]{String.valueOf(userId)});
     }
 
     public static String hashPassword(String password) {
@@ -354,5 +363,9 @@ public class DatabaseManager extends SQLiteOpenHelper {
         db.delete(TABLE_RECURRING_EXPENSE, COL_RECURRING_ID + " = ?", new String[]{String.valueOf(recurringID)});
     }
 
+    public Cursor getAllNotifications() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        return db.rawQuery("SELECT * FROM Notifications ORDER BY notificationID DESC", null);
+    }
 
 }
