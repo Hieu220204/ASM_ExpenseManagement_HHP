@@ -45,7 +45,6 @@ public class HomeActivity extends AppCompatActivity {
         Button btnBudgetSetting = findViewById(R.id.btnBudgetSetting);
         Button btnRecurringExpenses = findViewById(R.id.btnRecurringExpenses);
         Button btnReport = findViewById(R.id.btnReport);
-        Button btnExpenseNotifications = findViewById(R.id.btnExpenseNotifications);
         Button btnLogout = findViewById(R.id.btnLogout);
 
         // Set click listeners to navigate to corresponding activities
@@ -53,8 +52,6 @@ public class HomeActivity extends AppCompatActivity {
         btnBudgetSetting.setOnClickListener(v -> startActivity(new Intent(HomeActivity.this, BudgetSettingActivity.class)));
         btnRecurringExpenses.setOnClickListener(v -> startActivity(new Intent(HomeActivity.this, RecurringExpensesActivity.class)));
         btnReport.setOnClickListener(v -> startActivity(new Intent(HomeActivity.this, ReportsExpenseActivity.class)));
-        btnExpenseNotifications.setOnClickListener(v -> startActivity(new Intent(HomeActivity.this, ExpenseNotificationActivity.class)));
-
         // Handle logout by navigating back to LoginActivity and finishing the current activity
         btnLogout.setOnClickListener(v -> {
             startActivity(new Intent(HomeActivity.this, LoginActivity.class));

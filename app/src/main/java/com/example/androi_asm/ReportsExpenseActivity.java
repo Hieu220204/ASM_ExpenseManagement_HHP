@@ -12,6 +12,7 @@ import android.widget.ListView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.androi_asm.DataBase.DatabaseManager;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 
@@ -30,7 +31,7 @@ public class ReportsExpenseActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_reports_expense);
 
-        // Ánh xạ view
+        // Ánh xạ view từ XML
         edtExpenseContent = findViewById(R.id.edtExpenseContent);
         edtDate = findViewById(R.id.edtDate);
         btnSubmit = findViewById(R.id.btnSubmit);
@@ -89,12 +90,17 @@ public class ReportsExpenseActivity extends AppCompatActivity {
     private void loadExpenseReports() {
         expenseList.clear();
         Cursor cursor = databaseManager.getExpenseReports();
+        int index = 1;
 
         if (cursor.moveToFirst()) {
             do {
+                int id = cursor.getInt(0);
                 String content = cursor.getString(1);
-                String date = cursor.getString(2);
-                expenseList.add(content + " - " + date);
+                String date = cursor.getString(2); // Lấy đúng cột "date"
+
+                String displayText = index + ". " + content + " - " + date;
+                expenseList.add(displayText);
+                index++;
             } while (cursor.moveToNext());
         }
         cursor.close();
@@ -102,4 +108,6 @@ public class ReportsExpenseActivity extends AppCompatActivity {
         adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, expenseList);
         listViewReports.setAdapter(adapter);
     }
+
+
 }
