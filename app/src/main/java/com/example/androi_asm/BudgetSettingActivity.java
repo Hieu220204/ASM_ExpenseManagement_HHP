@@ -40,7 +40,7 @@ public class BudgetSettingActivity extends AppCompatActivity {
         edtStartDate = findViewById(R.id.edtStartDate);
         edtEndDate = findViewById(R.id.edtEndDate);
         btnAddExpense = findViewById(R.id.btnAddExpense);
-        btnEditExpense = findViewById(R.id.btnEditExpense);
+
         btnBackHome = findViewById(R.id.btnBackHome);
         listViewExpenses = findViewById(R.id.listViewExpenses);
 
@@ -57,8 +57,16 @@ public class BudgetSettingActivity extends AppCompatActivity {
         edtEndDate.setOnClickListener(v -> showDatePicker(edtEndDate));
 
         // Handle add and edit button clicks
-        btnAddExpense.setOnClickListener(v -> addBudgetItem());
-        btnEditExpense.setOnClickListener(v -> editBudgetItem());
+        btnAddExpense.setOnClickListener(v -> {
+            // Check if an item is selected for editing
+            if (selectedPosition != -1) {
+                // If yes, call update method
+                updateBudgetItem();
+            } else {
+                // If not, call add method
+                addBudgetItem();
+            }
+        });
 
         // Handle item selection from the ListView for editing
         listViewExpenses.setOnItemClickListener((parent, view, position, id) -> {
@@ -68,6 +76,9 @@ public class BudgetSettingActivity extends AppCompatActivity {
             edtAmount.setText(String.valueOf(item.getAmount()));
             edtStartDate.setText(item.getStartDate());
             edtEndDate.setText(item.getEndDate());
+
+            // Change button text to "Update"
+            btnAddExpense.setText("Update");
         });
 
         // Handle item long click for deletion
@@ -121,28 +132,37 @@ public class BudgetSettingActivity extends AppCompatActivity {
     }
 
     // Edits the selected budget item.
-    private void editBudgetItem() {
-        if (selectedPosition == -1) {
-            Toast.makeText(this, "Please select an item to edit", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
+    private void updateBudgetItem() {
+        String content = edtContent.getText().toString();
         String amountStr = edtAmount.getText().toString();
-        if (amountStr.isEmpty()) {
-            Toast.makeText(this, "Enter new amount", Toast.LENGTH_SHORT).show();
+        String startDate = edtStartDate.getText().toString();
+        String endDate = edtEndDate.getText().toString();
+
+        if (content.isEmpty() || amountStr.isEmpty() || startDate.isEmpty() || endDate.isEmpty()) {
+            Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        double newAmount = Double.parseDouble(amountStr);
-        budgetItems.get(selectedPosition).setAmount(newAmount);
+        double amount = Double.parseDouble(amountStr);
+        BudgetItem item = budgetItems.get(selectedPosition);
+        item.setContent(content);
+        item.setAmount(amount);
+        item.setStartDate(startDate);
+        item.setEndDate(endDate);
 
+        // Update the adapter and ListView
         adapter.clear();
         adapter.addAll(formatBudgetItems());
         adapter.notifyDataSetChanged();
+
+        // Save updated data
         saveBudgetData();
+
+        // Reset input fields and button text
         clearFields();
-        selectedPosition = -1;
-        Toast.makeText(this, "Budget amount updated", Toast.LENGTH_SHORT).show();
+        btnAddExpense.setText("Add Expense");
+        selectedPosition = -1; // Reset selection
+        Toast.makeText(this, "Expense updated", Toast.LENGTH_SHORT).show();
     }
 
     // Show confirmation dialog before deleting an item
@@ -191,7 +211,7 @@ public class BudgetSettingActivity extends AppCompatActivity {
     private ArrayList<String> formatBudgetItems() {
         ArrayList<String> formattedList = new ArrayList<>();
         for (BudgetItem item : budgetItems) {
-            formattedList.add(item.getContent() + " - $" + item.getAmount() + " - " +  item.getStartDate() + " - " + item.getEndDate());
+            formattedList.add(item.getContent() + " - $" + item.getAmount() + " - " + item.getStartDate() + " - " + item.getEndDate());
         }
         return formattedList;
     }

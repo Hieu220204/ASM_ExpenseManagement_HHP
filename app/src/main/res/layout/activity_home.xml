@@ -68,15 +68,7 @@
             android:textColor="#FFFFFF"
             android:layout_marginBottom="12dp" />
 
-        <Button
-            android:id="@+id/btnExpenseNotifications"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Expense Notifications"
-            android:textSize="18sp"
-            android:backgroundTint="#FF9800"
-            android:textColor="#FFFFFF"
-            android:layout_marginBottom="24dp" />
+
 
         <!-- Nút Logout -->
         <Button

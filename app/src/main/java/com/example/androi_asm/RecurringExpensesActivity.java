@@ -14,11 +14,11 @@ import java.util.Set;
 
 public class RecurringExpensesActivity extends AppCompatActivity {
     private EditText edtExpenseContent, edtAmount, edtStartDate, edtEndDate, spinnerFrequency;
-    private Button btnAddExpense, btnEditExpense, btnBackHome;
+    private Button btnAddExpense, btnBackHome;
     private ListView listViewExpenses;
     private ArrayAdapter<String> adapter;
     private ArrayList<String> expenseList;
-    private int selectedExpenseIndex = -1;
+    private int selectedExpenseIndex = -1; // Lưu chỉ số mục chi tiêu đang được chỉnh sửa
     private SharedPreferences sharedPreferences;
 
     @Override
@@ -33,7 +33,6 @@ public class RecurringExpensesActivity extends AppCompatActivity {
         edtStartDate = findViewById(R.id.edtStartDate);
         edtEndDate = findViewById(R.id.edtEndDate);
         btnAddExpense = findViewById(R.id.btnAddExpense);
-        btnEditExpense = findViewById(R.id.btnEditExpense);
         btnBackHome = findViewById(R.id.btnBackHome);
         listViewExpenses = findViewById(R.id.listViewExpenses);
 
@@ -44,8 +43,17 @@ public class RecurringExpensesActivity extends AppCompatActivity {
         edtStartDate.setOnClickListener(v -> showDatePickerDialog(edtStartDate));
         edtEndDate.setOnClickListener(v -> showDatePickerDialog(edtEndDate));
 
-        btnAddExpense.setOnClickListener(v -> addExpense());
-        btnEditExpense.setOnClickListener(v -> editExpense());
+        // Sự kiện khi nhấn nút AddExpense hoặc Update
+        btnAddExpense.setOnClickListener(v -> {
+            if (selectedExpenseIndex == -1) {
+                // Nếu không có mục nào được chọn, thêm mới
+                addExpense();
+            } else {
+                // Nếu có mục đang chỉnh sửa, cập nhật mục đó
+                updateExpense();
+            }
+        });
+
         btnBackHome.setOnClickListener(v -> {
             saveExpenses();
             finish();
@@ -59,6 +67,9 @@ public class RecurringExpensesActivity extends AppCompatActivity {
             edtAmount.setText(data[2].replace("$", ""));
             edtStartDate.setText(data[3]);
             edtEndDate.setText(data[4]);
+
+            // Đổi tên nút từ "Submit" thành "Update"
+            btnAddExpense.setText("Update");
         });
 
         listViewExpenses.setOnItemLongClickListener((parent, view, position, id) -> {
@@ -89,6 +100,7 @@ public class RecurringExpensesActivity extends AppCompatActivity {
         datePickerDialog.show();
     }
 
+    // Thêm mục chi tiêu mới
     private void addExpense() {
         String content = edtExpenseContent.getText().toString();
         String frequency = spinnerFrequency.getText().toString();
@@ -108,26 +120,29 @@ public class RecurringExpensesActivity extends AppCompatActivity {
         clearFields();
     }
 
-    private void editExpense() {
-        if (selectedExpenseIndex == -1) {
-            Toast.makeText(this, "Select an expense to edit", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
+    // Cập nhật mục chi tiêu đã chọn
+    private void updateExpense() {
         String content = edtExpenseContent.getText().toString();
         String frequency = spinnerFrequency.getText().toString();
         String amount = edtAmount.getText().toString();
         String startDate = edtStartDate.getText().toString();
         String endDate = edtEndDate.getText().toString();
 
+        if (content.isEmpty() || frequency.isEmpty() || amount.isEmpty() || startDate.isEmpty() || endDate.isEmpty()) {
+            Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         String updatedExpense = content + " - " + frequency + " - " + amount + "$ - " + startDate + " - " + endDate;
         expenseList.set(selectedExpenseIndex, updatedExpense);
         adapter.notifyDataSetChanged();
         saveExpenses();
         clearFields();
-        selectedExpenseIndex = -1;
+        selectedExpenseIndex = -1; // Reset sau khi cập nhật
+        btnAddExpense.setText("Add Expense"); // Đặt lại tên nút thành "Add Expense"
     }
 
+    // Làm sạch các trường nhập liệu
     private void clearFields() {
         edtExpenseContent.setText("");
         spinnerFrequency.setText("");
@@ -136,6 +151,7 @@ public class RecurringExpensesActivity extends AppCompatActivity {
         edtEndDate.setText("");
     }
 
+    // Lưu danh sách chi tiêu vào SharedPreferences
     private void saveExpenses() {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         Set<String> set = new HashSet<>(expenseList);
@@ -143,6 +159,7 @@ public class RecurringExpensesActivity extends AppCompatActivity {
         editor.apply();
     }
 
+    // Tải danh sách chi tiêu từ SharedPreferences
     private Set<String> loadExpenses() {
         return sharedPreferences.getStringSet("expenses", new HashSet<>());
     }
