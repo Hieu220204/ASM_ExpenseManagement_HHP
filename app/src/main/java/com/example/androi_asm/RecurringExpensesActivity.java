@@ -112,6 +112,11 @@ public class RecurringExpensesActivity extends AppCompatActivity {
             Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
             return;
         }
+        if (!isDateRangeValid(startDate, endDate)) {
+            Toast.makeText(this, "End date cannot be before start date", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
 
         String expense = content + " - " + frequency + " - " + amount + "$ - " + startDate + " - " + endDate;
         expenseList.add(expense);
@@ -132,6 +137,11 @@ public class RecurringExpensesActivity extends AppCompatActivity {
             Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
             return;
         }
+        if (!isDateRangeValid(startDate, endDate)) {
+            Toast.makeText(this, "End date cannot be before start date", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
 
         String updatedExpense = content + " - " + frequency + " - " + amount + "$ - " + startDate + " - " + endDate;
         expenseList.set(selectedExpenseIndex, updatedExpense);
@@ -162,5 +172,16 @@ public class RecurringExpensesActivity extends AppCompatActivity {
     // Tải danh sách chi tiêu từ SharedPreferences
     private Set<String> loadExpenses() {
         return sharedPreferences.getStringSet("expenses", new HashSet<>());
+    }
+    private boolean isDateRangeValid(String startDate, String endDate) {
+        try {
+            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy");
+            sdf.setLenient(false);
+            java.util.Date start = sdf.parse(startDate);
+            java.util.Date end = sdf.parse(endDate);
+            return !end.before(start); // trả về true nếu end >= start
+        } catch (Exception e) {
+            return false; // Nếu định dạng sai
+        }
     }
 }

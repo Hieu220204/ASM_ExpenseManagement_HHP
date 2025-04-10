@@ -119,6 +119,11 @@ public class BudgetSettingActivity extends AppCompatActivity {
             Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
             return;
         }
+        if (!isDateRangeValid(startDate, endDate)) {
+            Toast.makeText(this, "End date cannot be before start date", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
 
         double amount = Double.parseDouble(amountStr);
         BudgetItem item = new BudgetItem(content, amount, startDate, endDate);
@@ -140,6 +145,10 @@ public class BudgetSettingActivity extends AppCompatActivity {
 
         if (content.isEmpty() || amountStr.isEmpty() || startDate.isEmpty() || endDate.isEmpty()) {
             Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (!isDateRangeValid(startDate, endDate)) {
+            Toast.makeText(this, "End date cannot be before start date", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -215,4 +224,17 @@ public class BudgetSettingActivity extends AppCompatActivity {
         }
         return formattedList;
     }
+    // Utility method to compare two dates in "dd/MM/yyyy" format
+    private boolean isDateRangeValid(String startDate, String endDate) {
+        try {
+            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy");
+            sdf.setLenient(false);
+            java.util.Date start = sdf.parse(startDate);
+            java.util.Date end = sdf.parse(endDate);
+            return !end.before(start); // true nếu end >= start
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
 }
